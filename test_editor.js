@@ -1,0 +1,27 @@
+const {JSDOM}=require('jsdom');
+const fs=require('node:fs'); const assert=require('node:assert/strict');
+(async()=>{
+const dom=new JSDOM(fs.readFileSync('web/index.html','utf8'),{url:'http://localhost/#admin=test',runScripts:'outside-only'});
+const w=dom.window; const d=w.document;
+w.HTMLElement.prototype.scrollIntoView=function(){};
+w.HTMLDialogElement.prototype.showModal=function(){this.open=true};
+w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};
+let buttons=[{id:'b0',label:'Main gaming',icon:'01',color:'#4dd9b1',shortcut:'LeftAlt+M',confirm:false}];
+w.fetch=async(url,opts)=>{if(url.endsWith('/config')) buttons=JSON.parse(opts.body).buttons;return {ok:true,json:async()=>({admin:true,buttons,mode:'rehearsal',pairing:'12345678'})}};
+w.eval(fs.readFileSync('web/shortcuts.js','utf8')); w.eval(fs.readFileSync('web/app.js','utf8'));
+await new Promise(r=>setTimeout(r,10)); d.getElementById('edit').click(); d.getElementById('starter').click();
+assert.equal(d.querySelectorAll('.editrow').length,6);
+let field=d.querySelector('[name=shortcut]'); assert.equal(field.value,'LeftAlt+M');
+d.getElementById('starter').click(); assert.equal(d.querySelectorAll('.editrow').length,6);
+const record=[...d.querySelectorAll('.editrow button')].find(b=>b.textContent==='Record shortcut');
+record.click();
+for(const type of ['keydown','keyup']) d.dispatchEvent(new w.KeyboardEvent(type,{code:'AltLeft',key:'Alt',altKey:type==='keydown',bubbles:true,cancelable:true}));
+assert.equal(field.value,'LeftAlt'); assert.equal(record.textContent,'Record shortcut');
+record.click(); d.dispatchEvent(new w.KeyboardEvent('keydown',{code:'Escape',key:'Escape',bubbles:true,cancelable:true}));assert.equal(field.value,'LeftAlt');
+record.click(); w.dispatchEvent(new w.Event('blur')); assert.equal(record.textContent,'Record shortcut');
+const selects=d.querySelector('.key-picker').querySelectorAll('select');selects[1].value='RightAlt';selects[3].value='F13';
+[...d.querySelectorAll('button')].find(b=>b.textContent==='Use these keys').click();assert.equal(field.value,'RightAlt+F13');
+d.getElementById('editForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await new Promise(r=>setTimeout(r,10));
+assert.equal(buttons[0].shortcut,'RightAlt+F13');assert.equal(buttons.length,6);assert.equal(d.getElementById('editor').open,false);
+dom.window.close();console.log('Editor integration passed: preset preservation/deduplication, Left Alt capture, cancel, blur, dropdown and save.');
+})().catch(e=>{console.error(e);process.exit(1)});

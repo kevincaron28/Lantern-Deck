@@ -1,0 +1,13 @@
+__pycache__/
+deck.json
+deck.tmp
+work/
+outputs/
+*.spec
+maison-connection.json
+.env
+.env.*
+!.env.example
+*.log
+.venv/
+node_modules/

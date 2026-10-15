@@ -1,0 +1,61 @@
+LANTERN DECK - WINDOWS + SAMSUNG PHONE
+
+1. Double-click Lantern Deck.exe on your Windows PC.
+   No Python installation, command prompt or paid software is needed.
+   Your PC controls open automatically in your browser.
+
+2. Click Customize deck and assign the shortcuts you configured in
+   TikTok LIVE Studio. Only assigned buttons appear on your phone.
+
+3. Connect your Samsung phone to the same private network as your PC.
+   Scan the QR code in the Lantern Deck window using your phone camera.
+   Open the link, then enter the pairing code shown under the QR code.
+   You can also type the address shown above the QR code into your browser.
+
+4. Try your buttons in rehearsal, which sends no keys.
+   When ready, check Enable keyboard control in the PC window.
+   There is no need to restart or pair again when switching modes.
+
+Keep the Lantern Deck window open. Closing it stops phone control.
+On each new launch, it starts in rehearsal and you must pair your phone again.
+If more than one network address appears, select your home network adapter.
+If no address appears, connect your PC to Wi-Fi/Ethernet and restart the app.
+
+If Windows asks for network access, allow only your trusted Private network.
+Do not disable your firewall or expose the app to the internet.
+This local app uses HTTP and is intended for a trusted home network.
+
+Settings are saved in %LOCALAPPDATA%\LanternDeck\deck.json.
+Use Import existing deck to bring in a deck.json from the previous version.
+Backups are made before replacing an existing saved configuration.
+
+This build is unsigned. Windows may show a reputation warning.
+The app does not change Windows security settings or require administrator access.
+
+The phone reports shortcut delivery, not TikTok's actual state.
+Test your LIVE Studio shortcuts while offline before using them on a broadcast.
+Physical Samsung and actual TikTok shortcut behavior still need verification.
+
+To remove: close the app and delete Lantern Deck.exe. Your saved deck stays
+in the data folder above unless you remove it separately.
+
+UPDATE 1.1 - EASIER SHORTCUTS
+Close the old Lantern Deck window, extract the new ZIP into a folder,
+and double-click the new Lantern Deck.exe. Your saved buttons stay in
+%LOCALAPPDATA%\LanternDeck\deck.json. Pair your phone with the new code.
+
+In Customize deck:
+- Click Add all four starter buttons, or choose a single ready-made button.
+  Existing shortcuts are preserved. Assign the displayed shortcuts to the
+  matching actions in TikTok LIVE Studio, then Save changes.
+- Click Record shortcut, press and release the keys on your PC, then Save.
+  Escape cancels; recording ends after 15 seconds or if the window loses focus.
+- Choose keys instead lets you select Left Alt, Right Alt, Ctrl, Shift and
+  a key without pressing them. Choose Left Alt and leave Key as None for
+  Left Alt alone. Click Use these keys, then Save changes.
+- Browser-reserved combinations should be selected with the dropdowns.
+  Recording physical keys can also activate shortcuts in other running apps.
+
+Starter suggestions: Microphone Ctrl+Shift+M; Main scene Ctrl+Shift+1;
+Close-up Ctrl+Shift+2; Be right back Ctrl+Shift+3.
+These are suggestions, not built-in TikTok defaults or automatic integration.

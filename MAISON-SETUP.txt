@@ -1,0 +1,56 @@
+LANTERN DECK 2.0 + MAISON PANEL
+
+Use the Deck tab on your home panel. No Elgato app or keyboard shortcuts
+are needed in Maison mode.
+
+ON YOUR WIFE'S PC (or Kevin's PC for testing):
+1. Close the old Lantern Deck. Extract this ZIP and run Lantern Deck.exe.
+2. Open TikTok LIVE Studio to its main studio screen.
+3. On Maison Panel, open Deck > Configuration > Connecter un PC.
+   Sign into the existing Maison owner account in Settings if requested.
+4. Enter that eight-digit code into Lantern Deck on the PC and click
+   Connect to Maison. Codes expire after five minutes.
+5. Check Allow Maison to control scenes and audio on the PC.
+6. In the panel's Deck > Configuration, choose your actual Starting,
+   Gaming, BRB and Ending scenes from the dropdowns. Save once.
+
+The microphone and desktop-sound buttons use LIVE Studio's audio controls
+automatically. Test them offline: tap once, check the mute indicator in
+LIVE Studio, then tap again to restore. Test all four scene selections.
+Ending changes the scene; it never stops the broadcast.
+
+TEST PC TODAY, WIFE'S PC LATER:
+You may leave all scene dropdowns empty while testing audio on Kevin's PC.
+Pair your wife's PC later using a new code. That revokes Kevin's connection
+and clears the scene selections so you can choose hers. Her login, scenes,
+media and audio devices stay on her PC; this program does not copy them.
+
+EVERYDAY USE:
+Keep LIVE Studio and Lantern Deck open. Click the Deck tab on Maison.
+After each Lantern Deck launch, check Allow Maison to control scenes and
+ audio again. The pairing is remembered, but permission starts disabled.
+Disconnected or stale controls are disabled; no commands are queued offline.
+
+IF THE PC DOES NOT CONNECT:
+Check Internet access, open LIVE Studio's main screen, and read the status
+in Lantern Deck. Your version must expose its local controller channel.
+The adapter is independent and version-sensitive, not an official TikTok
+plugin. If TikTok rejects a command, the panel reports it instead of sending
+a keyboard shortcut or pretending it worked.
+
+MOVING / UPDATING:
+Copy this ZIP to the other PC and pair it there. Do not copy
+%LOCALAPPDATA%\LanternDeck\maison-connection.json: it contains a private key.
+Use Deck > Configuration > Deconnecter le PC to revoke a lost PC.
+The optional phone shortcut mode remains under its own button in the app.
+
+COST AND CONNECTION:
+The custom software has no license fee or subscription. The hosted Maison
+relay uses your existing Cloudflare account and Internet connection; free-tier
+limits apply. This is not an offline-only connection. No port forwarding is
+required. The relay carries only controller status, selected scene names and
+commands; it does not transmit your screen, video, camera or microphone audio.
+
+VALIDATION:
+See TESTING.md for automated checks and outstanding real-device checks.
+Fixture testing does not certify your LIVE Studio version or tablet.

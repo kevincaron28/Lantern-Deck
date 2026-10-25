@@ -81,8 +81,8 @@ The LIVE Studio controller channel is internal and version-sensitive. Lantern De
 known controller ports first, then probes any other port the LIVE Studio process listens
 on locally, and reports exactly what it found under **Diagnostics**. If an update breaks
 the channel, the deck says so rather than guessing. Use the studio test after LIVE Studio
-updates. `stream_status` values other than 0 are treated as "LIVE" (verify with your
-version; see [TESTING.md](TESTING.md)).
+updates. On 1.38.0 the controller is on port 28189 and `stream_status` is 0 while not broadcasting;
+other values are treated as "LIVE" (see [TESTING.md](TESTING.md)).
 
 ## Develop
 

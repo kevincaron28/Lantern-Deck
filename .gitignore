@@ -1,13 +1,17 @@
 __pycache__/
+*.pyc
 deck.json
 deck.tmp
+*.tmp
 work/
 outputs/
 *.spec
 maison-connection.json
+devices.json
 .env
 .env.*
 !.env.example
 *.log
 .venv/
 node_modules/
+.claude/settings.local.json

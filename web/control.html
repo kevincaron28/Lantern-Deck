@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Lantern Deck · Control center</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/control.css">
+  <script src="/i18n.js" defer></script>
+  <script src="/client.js" defer></script>
+  <script src="/shortcuts.js" defer></script>
+  <script src="/control.js" defer></script>
+</head>
+<body class="center">
+  <header class="topbar">
+    <div class="brand-row">
+      <img src="/icon.svg" alt="" width="28" height="28">
+      <div class="wordmark">LANTERN <b>DECK</b> <span id="version" class="edition"></span></div>
+    </div>
+    <div class="top-actions">
+      <span id="pillStudio" class="pill"></span>
+      <span id="pillMaison" class="pill"></span>
+      <span id="pillPhones" class="pill"></span>
+      <button id="lang" class="text-button" type="button" aria-label="Language">FR</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="offline" class="banner error" hidden data-i18n="cc.offline">Lantern Deck stopped or restarted. Open the control center again from the tray icon.</div>
+    <div id="updateBanner" class="banner" hidden>
+      <span id="updateText"></span> <a id="updateLink" href="#" target="_blank" rel="noopener noreferrer" data-i18n="cc.updateLink">See what's new</a>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow" data-i18n="cc.eyebrow">CONTROL CENTER</p>
+        <h1 id="heroTitle"></h1>
+        <p id="heroText"></p>
+        <p id="liveWarn" class="live-warn" hidden data-i18n="cc.liveWarn">You are LIVE. Phones must confirm scene changes.</p>
+      </div>
+      <button id="controlSwitch" class="switch" type="button" role="switch" aria-checked="false">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-text" data-i18n="cc.liveControl">Live control</span>
+      </button>
+    </section>
+
+    <section class="card checklist-card">
+      <h2 data-i18n="cc.setupTitle">Setup checklist</h2>
+      <ol id="checklist" class="checklist"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card" id="studioCard">
+        <div class="card-head"><h2 data-i18n="studio.title">LIVE Studio</h2><span id="studioState" class="pill"></span></div>
+        <dl class="facts">
+          <dt data-i18n="studio.scene">Scene</dt><dd id="factScene">—</dd>
+          <dt data-i18n="studio.mic">Microphone</dt><dd id="factMic">—</dd>
+          <dt data-i18n="studio.audio">Desktop sound</dt><dd id="factAudio">—</dd>
+          <dt data-i18n="studio.stream">Broadcast</dt><dd id="factStream">—</dd>
+        </dl>
+        <p id="studioMessage" class="hint"></p>
+        <div id="sceneChips" class="chips"></div>
+        <div class="actions">
+          <button id="runTest" class="secondary" type="button" data-i18n="studio.runTest">Run studio test</button>
+        </div>
+        <p class="hint" data-i18n="studio.testHint">Switches to each deck scene, toggles mic and desktop sound, then restores everything. Not allowed while LIVE.</p>
+        <ol id="testResults" class="test-results"></ol>
+      </article>
+
+      <article class="card" id="maisonCard">
+        <div class="card-head"><h2>Maison Panel</h2><span id="maisonState" class="pill"></span></div>
+        <p id="maisonMessage" class="hint"></p>
+        <form id="maisonForm" class="inline-form">
+          <label><span data-i18n="maison.code">Code from Maison > Deck > Connect a PC</span>
+            <input id="maisonCode" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="00000000">
+          </label>
+          <button class="primary" type="submit" data-i18n="maison.connect">Connect to Maison</button>
+        </form>
+        <div class="actions">
+          <a id="maisonOpen" class="button secondary" href="#" target="_blank" rel="noopener noreferrer" data-i18n="maison.open">Open Maison Deck</a>
+          <button id="maisonForget" class="text-button" type="button" data-i18n="maison.forget">Forget this connection</button>
+        </div>
+      </article>
+
+      <article class="card" id="phoneCard">
+        <div class="card-head"><h2 data-i18n="phones.title">Phones and tablets</h2></div>
+        <div class="phone-pair">
+          <canvas id="qr" width="180" height="180" aria-label="QR code"></canvas>
+          <div>
+            <label class="stack"><span data-i18n="phones.address">Address for your phone</span>
+              <select id="address"></select>
+            </label>
+            <p id="addressText" class="mono"></p>
+            <span class="tiny" data-i18n="phones.code">ONE-TIME PAIRING CODE</span>
+            <strong id="pairCode" class="paircode">—</strong>
+            <span id="pairExpiry" class="tiny"></span>
+            <div class="actions"><button id="newCode" class="secondary" type="button" data-i18n="phones.newCode">New code</button></div>
+          </div>
+        </div>
+        <p class="hint" data-i18n="phones.hint">Scan with the phone camera, then enter the code. Both devices must be on the same private network.</p>
+        <ul id="devices" class="device-list"></ul>
+        <button id="revokeAll" class="text-button danger" type="button" data-i18n="phones.revokeAll">Remove all devices</button>
+      </article>
+
+      <article class="card" id="deckCard">
+        <div class="card-head"><h2 data-i18n="deck.title">Deck</h2><button id="edit" class="primary" type="button" data-i18n="deck.edit">Edit buttons</button></div>
+        <div id="preview" class="preview"></div>
+        <div class="inline-form">
+          <label><span data-i18n="deck.profile">Start from a ready-made deck</span>
+            <select id="profile">
+              <option value="direct" data-i18n="profile.direct">Direct studio · 6 buttons (recommended)</option>
+              <option value="hotkeys" data-i18n="profile.hotkeys">Keyboard shortcuts · 6 buttons</option>
+              <option value="audio" data-i18n="profile.audio">Audio test · 2 shortcut buttons</option>
+            </select>
+          </label>
+          <button id="applyProfile" class="secondary" type="button" data-i18n="deck.apply">Replace deck</button>
+        </div>
+        <div class="actions">
+          <button id="importDeck" class="secondary" type="button" data-i18n="deck.import">Import deck…</button>
+          <button id="exportDeck" class="secondary" type="button" data-i18n="deck.export">Export deck</button>
+          <input id="importFile" type="file" accept=".json,application/json" hidden>
+        </div>
+      </article>
+
+      <article class="card" id="settingsCard">
+        <div class="card-head"><h2 data-i18n="settings.title">Settings</h2></div>
+        <label class="toggle"><input type="checkbox" data-setting="remember_control"><span data-i18n="settings.remember">Remember Live control after a restart</span></label>
+        <label class="toggle"><input type="checkbox" data-setting="confirm_when_live"><span data-i18n="settings.confirmLive">Ask phones to confirm scene changes while LIVE</span></label>
+        <label class="toggle"><input type="checkbox" data-setting="check_updates"><span data-i18n="settings.updates">Check GitHub for new versions at startup</span></label>
+        <label class="toggle"><input type="checkbox" id="autostart"><span data-i18n="settings.autostart">Start with Windows (in the tray)</span></label>
+      </article>
+
+      <article class="card" id="activityCard">
+        <div class="card-head"><h2 data-i18n="activity.title">Activity</h2></div>
+        <ol id="history" class="history"></ol>
+      </article>
+
+      <article class="card" id="diagCard">
+        <div class="card-head"><h2 data-i18n="diag.title">Diagnostics</h2></div>
+        <p class="hint" data-i18n="diag.hint">A report without tokens or codes, for troubleshooting.</p>
+        <div class="actions">
+          <button id="showDiag" class="secondary" type="button" data-i18n="diag.show">Show report</button>
+          <button id="copyDiag" class="secondary" type="button" data-i18n="diag.copy">Copy report</button>
+          <button id="openLogs" class="text-button" type="button" data-i18n="diag.logs">Open log folder</button>
+        </div>
+        <pre id="diagOutput" class="diag" hidden></pre>
+      </article>
+    </div>
+    <footer data-i18n="cc.footer">Closing this window keeps Lantern Deck running in the tray. Quit from the tray icon.</footer>
+  </main>
+
+  <dialog id="editor">
+    <form id="editForm">
+      <div class="toolbar">
+        <div><p class="eyebrow" data-i18n="editor.eyebrow">DECK CONFIGURATION</p><h2 data-i18n="editor.title">Make every key yours.</h2></div>
+        <button type="button" id="close" class="secondary" data-i18n="editor.close">Close</button>
+      </div>
+      <p class="hint" data-i18n="editor.help">Direct buttons control LIVE Studio and show its real state. Shortcut buttons send keys you also assign in LIVE Studio's hotkey settings.</p>
+      <div class="actions">
+        <button type="button" id="autoMatch" class="secondary" data-i18n="editor.autoMatch">Match scenes by name</button>
+        <button type="button" id="add" class="secondary" data-i18n="editor.add">+ Add button</button>
+      </div>
+      <p id="recordStatus" role="status" aria-live="polite"></p>
+      <div id="rows"></div>
+      <datalist id="sceneList"></datalist>
+      <div class="savebar"><span id="saveError" role="alert"></span><button class="primary" data-i18n="editor.save">Save changes</button></div>
+    </form>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

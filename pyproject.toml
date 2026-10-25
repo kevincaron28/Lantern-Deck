@@ -1,0 +1,48 @@
+[project]
+name = "lantern-deck"
+dynamic = ["version"]
+description = "Private control deck for TikTok LIVE Studio: phone deck, Maison Panel bridge and Windows tray app"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+dependencies = [
+    "qrcode==8.2",
+    "websocket-client==1.9.0",
+    "psutil==7.2.2",
+    "pystray==0.19.5",
+    "Pillow==13.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pyinstaller==6.22.3", "ruff==0.17.2"]
+
+[project.scripts]
+lantern-deck = "lantern.app:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "lantern.VERSION" }
+
+[tool.setuptools.packages.find]
+include = ["lantern*"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+extend-exclude = ["work", "outputs", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "N", "S"]
+ignore = [
+    "S101",  # assert is used by the packaged self-test and tests.
+    "S310",  # urllib only opens our fixed HTTPS / loopback URLs.
+    "S603",  # subprocess runs fixed executables (Edge, node fixture).
+    "S110",  # explicit best-effort cleanup.
+    "S104",  # phones reach the deck over the LAN; --bind 127.0.0.1 narrows it.
+    "I001",  # import order is grouped by hand.
+    "UP017",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "N802"]
+"tools/*" = ["S"]
+"lantern/dpapi.py" = ["N801"]  # Windows struct name.

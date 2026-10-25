@@ -1,76 +1,69 @@
 # Verification
 
-## Standalone Windows launcher — October 15, 2026
+## Version 3.0.0 — October 25, 2026
 
-Built Windows x64 `Lantern Deck.exe` with Python 3.14.3, PyInstaller 6.22.3 and qrcode 8.2. All seven server unit tests pass. The exact executable was copied into a separate folder whose path contains spaces and run with Python absent from PATH and no PYTHONHOME/PYTHONPATH. It exited successfully after verifying bundled web assets, hidden Tk-window construction, QR rendering, API pairing, live mode changes without re-pairing, configuration persistence and device revocation. No real keys were sent, no existing configuration was loaded or changed, and no browser was opened by the test.
+Environment: Windows 10 Pro x64, Python 3.14.3, Node.js 24.17.0, PyInstaller 6.22.3.
 
-The launcher saves settings outside the binary in `%LOCALAPPDATA%\LanternDeck`. Tests use temporary settings instead. This is a portable unsigned executable; first-run Windows firewall/reputation prompts, a clean Windows installation, physical QR scanning, Samsung Internet and actual TikTok shortcut behavior remain unverified. The smoke test verifies the startup components but does not constitute visual inspection of the native window or testing of the user's default browser launch.
+### Automated (all passing)
+- **57 Python tests** (`python -m unittest discover -s tests -t .`): hotkey grammar and scan
+  codes; deck validation, profiles, v2 compatibility, atomic saves and backup pruning;
+  settings types; device token hashing, limits and revocation; DPAPI round trip and tamper
+  rejection; log redaction; update version comparison; start-with-Windows registry entry
+  (fake registry); studio state typing, allowlist error codes, verified idempotent mute,
+  rejection, busy lock, port discovery order; engine rehearsal, direct scene/mute with
+  targets, LIVE confirmation, offline error and hotkey backup, cooldown, remember-control,
+  Maison commands, history; studio test restore and refusal while LIVE/offline; Maison
+  relay replies (legacy `error` + `reason`), credential migration, enrollment validation,
+  pairing/forgetting, 401 → "pair again"; HTTP host/origin checks, pairing (single use,
+  expiry, rate limit, persistence), phone/admin boundaries, phone button filtering, press
+  flows, profiles/import backups, device revocation and forget-me, settings validation,
+  diagnostics without secrets, studio-test endpoint, loopback-only window request, request
+  limits, and the event stream (initial state, pushed change, revocation).
+- **Socket.IO wire test** (`tests/test_transport.py`) against `tests/studio-fixture.cjs`:
+  discovery skipping a dead port, handshake and subprotocol, single join, mute targets,
+  scene switch, full studio test with restore, stream-status change, disconnect detection.
+- **Web UI tests** (`npm test`, jsdom): shortcut recorder (9 checks); EN/FR key parity and
+  coverage (206 keys); phone deck rendering of real state, mute targets, LIVE confirmation
+  round trip, language switch; control center token removal from the URL, pills, checklist,
+  Live control switch, scene auto-match, recording and Escape, save payload, profiles,
+  settings and device removal.
+- **Lint**: `ruff check .` clean (pyflakes, bugbear, bandit subset, naming, pyupgrade).
 
-## Samsung phone layout
+### Packaged executable
+`build.ps1` built `outputs/dist/Lantern Deck/` (33 MB) and
+`Lantern-Deck-3.0.0-Portable.zip` (17 MB). The copied folder in a path with spaces, with
+Python removed from PATH, passed its `--self-test`: bundled assets, phone pairing, rehearsal
+and Live control, event stream, control-center state and QR, profiles/backup/export,
+persistent devices and revocation, DPAPI, tray backend. No real keys were sent.
 
-Verified the paired-device view at 360×800 and 412×915 browser viewports: two columns, four assigned rehearsal controls visible, two unassigned controls hidden, no empty slots and no horizontal overflow. Pairing and rehearsal feedback work. No actual keyboard input was sent. A separate `work/phone-preview.json` was used; the delivered default mappings remain unassigned. Physical Samsung hardware and Samsung Internet remain untested.
+The built exe was also launched for real in tray mode on a spare port and data folder:
+the server answered, unauthenticated API calls returned 401, a second launch handed off to
+the running instance (which opened its Edge app window) and exited, and the log recorded
+both starts.
 
-## Studio UI redesign
+The installer was **not** built on the development PC (Inno Setup is not installed there);
+CI installs Inno Setup and builds it. The build is unsigned (no certificate configured).
 
-Browser-verified customization save, rehearsal feedback, last-action readout, shortcut-label visibility, focus view, and opening a new key from an empty slot. Desktop and narrow-screen layouts checked for horizontal overflow. JavaScript syntax check passes. Existing mappings and the companion's authentication/execution behavior are unchanged. Screenshots use a separate rehearsal configuration; no actual shortcuts were emitted.
+### Browser check
+The control center and phone deck were run against the fake studio
+(`tools/dev_server.py`) and inspected at desktop and 375×812 phone sizes: live studio pills,
+checklist progression, scene auto-match and save, pairing a phone, current-scene highlight,
+mute state, Live control ON, scene switch and mic mute from the phone, studio test with
+restore, French interface.
 
-## Original MVP verification
+### Not yet verified (needs the real setup)
+- **Real LIVE Studio.** LIVE Studio was not running during development, so no real scene
+  or mute command has been sent by any version. Do this before relying on it:
+  open LIVE Studio (not live), start Lantern Deck, and click **Run studio test**. The
+  result, the port used and the LIVE Studio version are saved in
+  `%LOCALAPPDATA%\LanternDeck\studio-test-latest.json` and shown under Diagnostics.
+- **`stream_status` meaning.** Values other than 0 are treated as LIVE. Confirm by starting a
+  private/test broadcast and checking the LIVE pill.
+- Physical Samsung phone / Samsung Internet, Windows firewall prompt on a clean PC, the
+  Maison relay with 3.0 (protocol unchanged; replies gained `reason`/`message`), the
+  installer, start with Windows after a reboot, and SmartScreen behaviour.
 
-Environment: Windows, Python 3.14.3, Node.js 24.17.0 (used only to check JavaScript syntax; not a runtime requirement).
-
-- Seven automated tests pass: auth/pair/revoke; pairing expiry and rate limits; Host/Origin checks and fixed-file routing; rehearsal and saved-action allowlist; confirmation/cooldown with a mock key sender; atomic persistence and invalid config rejection; shortcut grammar.
-- `node --check web/app.js` passes.
-- Real browser verification: opened the PC editor, edited a label and shortcut, saved, and tapped the button in rehearsal. The UI displayed “Rehearsed: Rehearsal test”.
-- Opened the PC's LAN URL in a second browser tab, entered its pairing code, and verified the tablet view shows the deck without editor privileges. This tests the LAN-address route on the same PC, not a physical Android tablet or firewall traversal.
-- Tablet-sized 800×1000 layout inspected visually. At 390×844, the deck uses two columns, buttons measure approximately 160×171 pixels, and document scroll width equals client width (no horizontal overflow).
-- Browser tests use `work/preview-deck.json`, separate from the deliverable's default config. No live mappings are shipped.
-
-Not verified: physical Android connectivity, actual Windows key injection into another app, TikTok LIVE Studio 1.14.2 hotkey availability or response, global hotkeys while another app is focused, and privileged-app behavior. No real keyboard shortcuts were emitted by the companion during testing. No streaming settings were changed.
-
-## Version 1.1 — shortcut editor update (October 15, 2026)
-Nine server tests pass, including Left Alt normalization, side-specific scan
-codes, release order, persistence and mock delivery. Nine JavaScript shortcut
-checks pass. A jsdom integration test passes preset preservation/deduplication,
-Left Alt recording, Escape cancellation, window-blur cancellation, dropdown
-selection and saving. JavaScript syntax checks pass.
-
-The rebuilt executable passed the isolated standalone smoke test with Python
-removed from PATH, including the new shortcuts.js asset. No actual keys were
-sent. The new editor was DOM-tested, not visually browser-tested; real Windows
-key delivery to TikTok and physical Samsung behavior remain unverified.
-
-To reproduce DOM tests: npm install --prefix work/ui-test --no-audit --no-fund jsdom
-then node test_editor.js. Other tests: python -m unittest -v and
-node test_shortcuts.js. jsdom and Node are development tools only.
-
-## Version 1.2
-Added built-in audio-test and full-studio setup, current-shortcut instructions,
-profile export, automatic backup before profile replacement, and rehearsal
-reset when replacing a profile. Updated editor presets to all six controls.
-Server tests (9), recorder checks (9), and editor integration pass. Native
-source smoke checks pass for both profiles, export contents, two backups,
-rehearsal reset, pairing and assets. See binary smoke report for exact packaged
-build verification. Actual TikTok delivery and Samsung hardware remain pending.
-
-## Version 2.0 Maison integration
-14 Python tests pass, including typed/sanitized studio state, action allowlist,
-stale-state rejection, target mute idempotency and bridge deadline/replay checks.
-A local Socket.IO fixture verifies actual wire handshake/subprotocol, join once,
-state updates, scene selection, mute target behavior and disconnect invalidation.
-This fixture does not run or modify the actual TikTok application.
-Maison Panel has 71 passing tests, including owner session/CSRF, one-time pairing,
-attempt limits, concurrent code consumption, response correlation, stale revisions,
-UI state rendering, one-command-per-tap behavior and existing site regressions.
-Native source self-test passes. Packaged executable results accompany the release.
-Actual TikTok control and the physical home panel/wife's PC remain unverified
-until LIVE Studio is running and the pair-and-offline-test sequence is completed.
-
-### Published verification
-The live Maison Deck page returns HTTP 200; unauthenticated state and publisher
-requests return HTTP 401. The real PC completed one-time pairing and maintained
-an authenticated outbound WebSocket to the production relay with control OFF.
-LIVE Studio was not running, so no real scene/mute command was issued.
-The 1280x800 browser viewport shows all six 401x160-pixel buttons without
-horizontal overflow. Deck is exempt from Maison's automatic idle return home.
-The packaged Windows executable passed its standalone smoke checks without
-Python on PATH. A physical tablet and wife's PC remain untested.
+## Earlier versions
+Version 2.0 added the Maison integration (14 Python tests, fixture wire test, packaged
+self-test; real LIVE Studio control unverified). Versions 1.0–1.2 covered the keyboard
+shortcut deck. See git history for their full notes.

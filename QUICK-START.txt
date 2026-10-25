@@ -1,61 +1,32 @@
-LANTERN DECK - WINDOWS + SAMSUNG PHONE
+LANTERN DECK 3 - QUICK START
 
-1. Double-click Lantern Deck.exe on your Windows PC.
-   No Python installation, command prompt or paid software is needed.
-   Your PC controls open automatically in your browser.
+1. Open TikTok LIVE Studio on its main studio screen.
 
-2. Click Customize deck and assign the shortcuts you configured in
-   TikTok LIVE Studio. Only assigned buttons appear on your phone.
+2. Start Lantern Deck. The control center opens and a lantern icon
+   appears in the taskbar tray. Closing the window keeps it running;
+   quit from the tray icon.
 
-3. Connect your Samsung phone to the same private network as your PC.
-   Scan the QR code in the Lantern Deck window using your phone camera.
-   Open the link, then enter the pairing code shown under the QR code.
-   You can also type the address shown above the QR code into your browser.
+3. Follow the setup checklist at the top of the control center:
+   - LIVE Studio detected (turns green by itself)
+   - Connect a phone: scan the QR code with the phone camera, open
+     the link and enter the pairing code. Both devices must be on the
+     same private network. The phone stays paired after restarts.
+   - Assign your scenes: Edit buttons > Match scenes by name > Save.
+   - Test while offline: Run studio test. It switches scenes, toggles
+     the mic and desktop sound, and restores everything.
+   - Go live: turn on Live control.
 
-4. Try your buttons in rehearsal, which sends no keys.
-   When ready, check Enable keyboard control in the PC window.
-   There is no need to restart or pair again when switching modes.
+Until Live control is ON, buttons are only rehearsed: nothing reaches
+LIVE Studio. While you are LIVE, phones ask before changing scenes.
 
-Keep the Lantern Deck window open. Closing it stops phone control.
-On each new launch, it starts in rehearsal and you must pair your phone again.
-If more than one network address appears, select your home network adapter.
-If no address appears, connect your PC to Wi-Fi/Ethernet and restart the app.
+Buttons show LIVE Studio's real state: the current scene is lit,
+mute buttons say Muted or On.
 
-If Windows asks for network access, allow only your trusted Private network.
+If Windows asks about network access, allow Private networks only.
 Do not disable your firewall or expose the app to the internet.
-This local app uses HTTP and is intended for a trusted home network.
+The phone connection uses HTTP and is meant for a trusted home network.
 
-Settings are saved in %LOCALAPPDATA%\LanternDeck\deck.json.
-Use Import existing deck to bring in a deck.json from the previous version.
-Backups are made before replacing an existing saved configuration.
+Settings: %LOCALAPPDATA%\LanternDeck (kept when you update or uninstall).
+Problems? Control center > Diagnostics > Copy report.
 
-This build is unsigned. Windows may show a reputation warning.
-The app does not change Windows security settings or require administrator access.
-
-The phone reports shortcut delivery, not TikTok's actual state.
-Test your LIVE Studio shortcuts while offline before using them on a broadcast.
-Physical Samsung and actual TikTok shortcut behavior still need verification.
-
-To remove: close the app and delete Lantern Deck.exe. Your saved deck stays
-in the data folder above unless you remove it separately.
-
-UPDATE 1.1 - EASIER SHORTCUTS
-Close the old Lantern Deck window, extract the new ZIP into a folder,
-and double-click the new Lantern Deck.exe. Your saved buttons stay in
-%LOCALAPPDATA%\LanternDeck\deck.json. Pair your phone with the new code.
-
-In Customize deck:
-- Click Add all four starter buttons, or choose a single ready-made button.
-  Existing shortcuts are preserved. Assign the displayed shortcuts to the
-  matching actions in TikTok LIVE Studio, then Save changes.
-- Click Record shortcut, press and release the keys on your PC, then Save.
-  Escape cancels; recording ends after 15 seconds or if the window loses focus.
-- Choose keys instead lets you select Left Alt, Right Alt, Ctrl, Shift and
-  a key without pressing them. Choose Left Alt and leave Key as None for
-  Left Alt alone. Click Use these keys, then Save changes.
-- Browser-reserved combinations should be selected with the dropdowns.
-  Recording physical keys can also activate shortcuts in other running apps.
-
-Starter suggestions: Microphone Ctrl+Shift+M; Main scene Ctrl+Shift+1;
-Close-up Ctrl+Shift+2; Be right back Ctrl+Shift+3.
-These are suggestions, not built-in TikTok defaults or automatic integration.
+Pas d'anglais ? Touchez FR en haut de l'écran.

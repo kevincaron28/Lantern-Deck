@@ -1,0 +1,14 @@
+// Shortcut recorder: turns browser key events into the server's shortcut grammar.
+const assert = require('node:assert/strict');
+const s = require('../../web/shortcuts.js');
+const event = (code, flags = {}) => ({ code, ...flags });
+assert.equal(s.chord(event('KeyM', { altKey: true }), new Set(['AltLeft', 'KeyM'])), 'LeftAlt+M');
+assert.equal(s.chord(event('F24', { altKey: true }), new Set(['AltRight', 'F24'])), 'RightAlt+F24');
+assert.equal(s.chord(event('Digit1', { ctrlKey: true, shiftKey: true }), new Set(['ControlLeft', 'ShiftRight', 'Digit1'])), 'LeftCtrl+RightShift+1');
+assert.equal(s.chord(event('F13'), new Set(['F13'])), 'F13');
+assert.equal(s.chord(event('KeyA'), new Set(['KeyA'])), null);
+assert.equal(s.chord(event('KeyA', { metaKey: true }), new Set(['KeyA'])), null);
+assert.equal(s.chord(event('KeyA', { altKey: true }), new Set(['AltLeft', 'AltRight', 'KeyA'])), null);
+assert.equal(s.chord(event('KeyB', { altKey: true }), new Set(['AltLeft', 'KeyA', 'KeyB'])), null);
+assert.equal(s.modifiers.AltLeft, 'LeftAlt');
+console.log('shortcuts: 9 recorder checks passed');

@@ -1,9 +1,11 @@
 {
   "name": "lantern-deck",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
+  "description": "Development tooling for Lantern Deck's web UI tests and fake LIVE Studio fixture",
   "scripts": {
-    "test": "node test_shortcuts.js && node test_editor.js"
+    "test": "node tests/js/shortcuts.test.js && node tests/js/i18n.test.js && node tests/js/phone.test.js && node tests/js/control.test.js",
+    "fixture": "node tests/studio-fixture.cjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

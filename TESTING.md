@@ -66,12 +66,14 @@ was checked from the log instead: commit 92718b1 logged "LIVE Studio installed: 
 in either run. **0 = not live is confirmed on 1.38.0**; which non-zero value means live is still
 unobserved (it only adds a confirmation before scene changes).
 
+**Real control confirmed (06:29–06:31).** The in-app studio test passed on LIVE Studio 1.38.0
+(scenes Start / Main / BRB / END, mic and desktop sound toggled and restored). With Live control
+ON, the Maison wall tablet then switched scenes and muted/unmuted the mic and desktop sound; every
+command was confirmed by LIVE Studio's state. Polarity checked by eye in LIVE Studio:
+`mic_mute` / `audio_mute` = `True` means muted for both. The tablet's flashing and unclear mute
+display are Maison Panel UI issues (its `js/deck.js`), not Lantern Deck.
+
 ### Not yet verified (needs the real setup)
-- **Real LIVE Studio commands.** The controller connects on 1.38.0, but no real scene or mute
-  command has been sent yet. Do this before relying on it:
-  open LIVE Studio (not live), start Lantern Deck, and click **Run studio test**. The
-  result, the port used and the LIVE Studio version are saved in
-  `%LOCALAPPDATA%\LanternDeck\studio-test-latest.json` and shown under Diagnostics.
 - **Which non-zero `stream_status` means LIVE** (0 = not live is confirmed on 1.38.0). Non-zero
   values are treated as LIVE; only observable during a real broadcast.
 - Physical Samsung phone / Samsung Internet, Windows firewall prompt on a clean PC, the

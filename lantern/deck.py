@@ -6,9 +6,31 @@ from lantern import storage
 from lantern.hotkeys import shortcut
 
 MAX_BUTTONS = 32
-# hotkey = send a keyboard shortcut; the others talk to LIVE Studio directly.
-ACTION_KINDS = ('hotkey', 'scene', 'mic', 'audio')
-DIRECT_KINDS = ('scene', 'mic', 'audio')
+# hotkey = send a keyboard shortcut; macro = several direct steps; the others talk to LIVE Studio directly.
+ACTION_KINDS = ('hotkey', 'scene', 'mic', 'audio', 'macro')
+MAX_STEPS = 8
+MAX_WAIT_TOTAL = 10000
+
+
+def validate_step(raw):
+    if not isinstance(raw, dict):
+        raise ValueError('Invalid step')
+    kind = raw.get('kind')
+    if kind == 'scene':
+        scene = raw.get('scene')
+        if not isinstance(scene, str) or not 1 <= len(scene.strip()) <= 200:
+            raise ValueError('Each scene step needs a scene name')
+        return {'kind': 'scene', 'scene': scene.strip()}
+    if kind in ('mic', 'audio'):
+        if type(raw.get('muted')) is not bool:
+            raise ValueError('Each mute step needs Mute or Unmute')
+        return {'kind': kind, 'muted': raw['muted']}
+    if kind == 'wait':
+        ms = raw.get('ms')
+        if type(ms) is not int or not 100 <= ms <= 5000:
+            raise ValueError('Waits must be 100–5000 ms')
+        return {'kind': 'wait', 'ms': ms}
+    raise ValueError('Unknown step')
 
 
 def validate_action(raw):
@@ -22,6 +44,16 @@ def validate_action(raw):
         if not isinstance(scene, str) or len(scene.strip()) > 200:
             raise ValueError('Scene names are limited to 200 characters')
         return {'kind': 'scene', 'scene': scene.strip()}
+    if kind == 'macro':
+        steps = raw.get('steps')
+        if not isinstance(steps, list) or not 1 <= len(steps) <= MAX_STEPS:
+            raise ValueError(f'Multi-step buttons need 1–{MAX_STEPS} steps')
+        steps = [validate_step(s) for s in steps]
+        if all(s['kind'] == 'wait' for s in steps):
+            raise ValueError('Add at least one scene or mute step')
+        if sum(s.get('ms', 0) for s in steps) > MAX_WAIT_TOTAL:
+            raise ValueError('Waits may total at most 10 seconds')
+        return {'kind': 'macro', 'steps': steps}
     return {'kind': kind}
 
 

@@ -64,12 +64,24 @@ const fetch = async (url, opts = {}) => {
   d.dispatchEvent(new w.KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true, cancelable: true }));
   assert.equal(record.textContent, 'Record shortcut', 'Escape cancels recording');
 
+  d.getElementById('presetBrb').click();
+  const macroRow = d.querySelector('#rows').lastElementChild;
+  assert.equal(macroRow.querySelector('[name=kind]').value, 'macro');
+  assert.equal(macroRow.querySelector('[name=stepScene]').value, 'BRB', 'preset picks the BRB scene by name');
+  [...macroRow.querySelectorAll('button')].find(b => b.textContent === '+ Add step').click();
+  const added = macroRow.querySelectorAll('.step-row')[2];
+  const stepKind = added.querySelector('.step-kind');
+  stepKind.value = 'wait';
+  stepKind.dispatchEvent(new w.Event('change'));
+  added.querySelector('[name=stepMs]').value = '700';
+
   d.getElementById('editForm').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
   await wait(20);
   const saved = posts['/api/config'].buttons;
   assert.equal(saved[1].action.scene, 'Gaming');
   assert.deepEqual(saved[5].action, { kind: 'hotkey' });
   assert.equal(saved[5].shortcut, 'LeftAlt');
+  assert.deepEqual(saved[6].action, { kind: 'macro', steps: [{ kind: 'scene', scene: 'BRB' }, { kind: 'mic', muted: true }, { kind: 'wait', ms: 700 }] });
   assert.equal(d.getElementById('editor').open, false);
 
   d.getElementById('profile').value = 'hotkeys';

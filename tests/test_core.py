@@ -60,6 +60,21 @@ class DeckTests(TempDir):
             with self.assertRaises(ValueError):
                 validate(config)
 
+    def test_multi_step_validation(self):
+        config = defaults()
+        steps = [{'kind': 'scene', 'scene': ' BRB '}, {'kind': 'wait', 'ms': 500}, {'kind': 'mic', 'muted': True}]
+        config['buttons'][0]['action'] = {'kind': 'macro', 'steps': steps}
+        action = validate(config)['buttons'][0]['action']
+        self.assertEqual(action['steps'][0], {'kind': 'scene', 'scene': 'BRB'})
+        self.assertTrue(usable(validate(config)['buttons'][0]))
+        bad_steps = [[], [{'kind': 'wait', 'ms': 500}], [{'kind': 'scene', 'scene': ''}], [{'kind': 'mic', 'muted': 'yes'}],
+                     [{'kind': 'mic', 'muted': True}, {'kind': 'wait', 'ms': 50}], [{'kind': 'hotkey', 'shortcut': 'Alt+F4'}],
+                     [{'kind': 'mic', 'muted': True}] * 9, [{'kind': 'mic', 'muted': True}] + [{'kind': 'wait', 'ms': 5000}] * 3]
+        for bad in bad_steps:
+            config['buttons'][0]['action'] = {'kind': 'macro', 'steps': bad}
+            with self.assertRaises(ValueError, msg=bad):
+                validate(config)
+
     def test_invalid_buttons_rejected(self):
         for change in ({'id': 'gaming'}, {'color': 'red'}, {'label': ''}, {'icon': 'x' * 13}):
             config = defaults()

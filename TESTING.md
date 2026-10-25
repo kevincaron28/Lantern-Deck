@@ -5,7 +5,7 @@
 Environment: Windows 10 Pro x64, Python 3.14.3, Node.js 24.17.0, PyInstaller 6.22.3.
 
 ### Automated (all passing)
-- **57 Python tests** (`python -m unittest discover -s tests -t .`): hotkey grammar and scan
+- **62 Python tests** (`python -m unittest discover -s tests -t .`): hotkey grammar and scan
   codes; deck validation, profiles, v2 compatibility, atomic saves and backup pruning;
   settings types; device token hashing, limits and revocation; DPAPI round trip and tamper
   rejection; log redaction; update version comparison; start-with-Windows registry entry
@@ -19,14 +19,17 @@ Environment: Windows 10 Pro x64, Python 3.14.3, Node.js 24.17.0, PyInstaller 6.2
   flows, profiles/import backups, device revocation and forget-me, settings validation,
   diagnostics without secrets, studio-test endpoint, loopback-only window request, request
   limits, and the event stream (initial state, pushed change, revocation).
+- Multi-step buttons: validation limits (1–8 steps, waits 100–5000 ms, 10 s total, at least
+  one real step, no hotkey steps), rehearsal, in-order execution, stop at first failure,
+  LIVE confirmation when a step changes scenes, offline refusal; LIVE timer start/stop.
 - **Socket.IO wire test** (`tests/test_transport.py`) against `tests/studio-fixture.cjs`:
   discovery skipping a dead port, handshake and subprotocol, single join, mute targets,
   scene switch, full studio test with restore, stream-status change, disconnect detection.
 - **Web UI tests** (`npm test`, jsdom): shortcut recorder (9 checks); EN/FR key parity and
-  coverage (206 keys); phone deck rendering of real state, mute targets, LIVE confirmation
-  round trip, language switch; control center token removal from the URL, pills, checklist,
+  coverage (223 keys); phone deck rendering of real state, mute targets, LIVE confirmation
+  round trip, multi-step key state, LIVE timer text, language switch; control center token removal from the URL, pills, checklist,
   Live control switch, scene auto-match, recording and Escape, save payload, profiles,
-  settings and device removal.
+  settings and device removal, multi-step presets and step editing.
 - **Lint**: `ruff check .` clean (pyflakes, bugbear, bandit subset, naming, pyupgrade).
 
 ### Packaged executable

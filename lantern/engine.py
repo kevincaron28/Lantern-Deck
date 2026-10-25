@@ -50,7 +50,9 @@ class Engine:
         self.last = 0
         self.history = deque(maxlen=25)
         self._control = bool(settings['remember_control'] and settings['control_enabled'])
-        studio.add_listener(self.bus.notify)
+        self.live_since = None
+        self.sleep = time.sleep
+        studio.add_listener(self._studio_changed)
         store.listeners.append(self.bus.notify)
 
     @property
@@ -64,13 +66,28 @@ class Engine:
         log.info('Live control %s', 'ON' if self._control else 'OFF')
         self.bus.notify()
 
+    def _track_live(self, live):
+        """Remember when the broadcast started so surfaces can show a LIVE timer."""
+        if live and self.live_since is None:
+            self.live_since = time.time()
+            log.info('Broadcast detected as LIVE')
+        elif not live and self.live_since is not None:
+            self.live_since = None
+            log.info('Broadcast no longer LIVE')
+
+    def _studio_changed(self):
+        self._track_live(is_live(self.studio.snapshot()['state']))
+        self.bus.notify()
+
     def studio_state(self):
         snap = self.studio.snapshot()
         state = snap['state'] or {}
+        live = is_live(snap['state'])
+        self._track_live(live)
         return {'connected': snap['connected'], 'message': snap['error'],
                 'scene': state.get('scene'), 'scenes': state.get('scenes', []),
                 'mic_muted': state.get('mic_mute'), 'audio_muted': state.get('audio_mute'),
-                'stream_status': state.get('stream_status'), 'live': is_live(snap['state'])}
+                'stream_status': state.get('stream_status'), 'live': live, 'live_since': self.live_since}
 
     def public_state(self):
         return {'control': self.control, 'studio': self.studio_state()}
@@ -117,17 +134,20 @@ class Engine:
             raise ActionError('invalid', 'Invalid target state')
         self._cooldown()
         studio = self.studio.snapshot()
-        if self.control and kind == 'scene' and studio['connected'] and is_live(studio['state']) \
+        changes_scene = kind == 'scene' or (kind == 'macro' and any(s['kind'] == 'scene' for s in action['steps']))
+        if self.control and changes_scene and studio['connected'] and is_live(studio['state']) \
                 and self.settings['confirm_when_live'] and not confirmed:
             raise ActionError('confirm_live', 'You are LIVE. Confirm this scene change.', 409)
         if not self.control:
             return {'ok': True, 'code': 'rehearsed', 'message': 'Rehearsed: ' + button['label']}
         if not studio['connected']:
-            if button['fallback'] and button['shortcut']:
+            if kind != 'macro' and button['fallback'] and button['shortcut']:
                 self.sender(button['shortcut'])
                 return {'ok': True, 'code': 'keys_sent',
                         'message': 'Studio offline · shortcut sent: ' + button['label']}
             raise ActionError('studio_offline', studio['error'] or 'LIVE Studio is not connected', 503)
+        if kind == 'macro':
+            return self._macro(button)
         if kind == 'scene':
             command = {'action': 'scene', 'scene': action['scene']}
         else:
@@ -136,6 +156,24 @@ class Engine:
         snap = self.studio.execute(command)
         return {'ok': True, 'code': 'done' if snap['changed'] else 'already',
                 'message': describe(button['label'], command, snap['changed'])}
+
+    def _macro(self, button):
+        """Run steps in order. Stops at the first failure; earlier steps stay applied."""
+        steps = button['action']['steps']
+        changed = False
+        for number, step in enumerate(steps, 1):
+            if step['kind'] == 'wait':
+                self.sleep(step['ms'] / 1000)
+                continue
+            command = {'action': step['kind']} | ({'scene': step['scene']} if step['kind'] == 'scene'
+                                                    else {'muted': step['muted']})
+            try:
+                changed = self.studio.execute(command)['changed'] or changed
+            except StudioError as exc:
+                raise ActionError('macro_failed', f'{button["label"]}: step {number} of {len(steps)} failed ({exc}). '
+                                  'Earlier steps stayed applied.', 502) from exc
+        return {'ok': True, 'code': 'done' if changed else 'already',
+                'message': f'{button["label"]}: {len(steps)} steps done' + ('' if changed else ' (already)')}
 
     def command(self, command, source='maison'):
         """Allowlisted command from Maison Panel (scene / mic / audio)."""

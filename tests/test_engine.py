@@ -203,6 +203,65 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.history[0]['source'], 'phone:Tablet')
         self.assertEqual(self.engine.history[1]['source'], 'maison')
 
+    def add_macro(self, steps, ident='macro'):
+        config = self.store.config
+        config['buttons'].append({'id': ident, 'label': 'BRB + mute', 'icon': '03', 'color': '#d3acff',
+                                  'action': {'kind': 'macro', 'steps': steps}, 'shortcut': '', 'fallback': False,
+                                  'confirm': False})
+        self.store.save(config)
+
+    def test_macro_runs_steps_in_order(self):
+        waits = []
+        self.engine.sleep = waits.append
+        self.add_macro([{'kind': 'scene', 'scene': 'BRB'}, {'kind': 'wait', 'ms': 300}, {'kind': 'mic', 'muted': True}])
+        self.assertEqual(self.press('macro')['code'], 'rehearsed')
+        self.assertEqual(self.studio.data['scene'], 'Gaming')
+        self.engine.set_control(True)
+        self.assertEqual(self.press('macro')['code'], 'done')
+        self.assertEqual((self.studio.data['scene'], self.studio.data['mic_mute']), ('BRB', True))
+        self.assertEqual(waits, [.3])
+        actions = [p['action'] for n, p in self.studio.sent if n == 'action_emit']
+        self.assertEqual(actions, ['com.tiktok.livestudio.scene', 'com.tiktok.livestudio.mic'])
+        self.assertEqual(self.press('macro')['code'], 'already')
+
+    def test_macro_stops_at_first_failure(self):
+        self.add_macro([{'kind': 'mic', 'muted': True}, {'kind': 'scene', 'scene': 'Deleted scene'},
+                        {'kind': 'audio', 'muted': True}])
+        self.engine.set_control(True)
+        with self.assertRaises(ActionError) as caught:
+            self.press('macro')
+        self.assertEqual((caught.exception.code, caught.exception.status), ('macro_failed', 502))
+        self.assertIn('step 2 of 3', str(caught.exception))
+        self.assertTrue(self.studio.data['mic_mute'])
+        self.assertFalse(self.studio.data['audio_mute'], 'later steps must not run')
+
+    def test_macro_live_guard_and_offline(self):
+        self.add_macro([{'kind': 'scene', 'scene': 'BRB'}, {'kind': 'mic', 'muted': True}])
+        self.add_macro([{'kind': 'mic', 'muted': True}], 'muteonly')
+        self.engine.set_control(True)
+        self.studio.data['stream_status'] = 1
+        with self.assertRaises(ActionError) as caught:
+            self.press('macro')
+        self.assertEqual(caught.exception.code, 'confirm_live')
+        self.assertEqual(self.press('muteonly')['code'], 'done')
+        offline = Engine(self.store, OfflineStudio(), self.settings, self.sent.append)
+        offline.set_control(True)
+        with self.assertRaises(ActionError) as caught:
+            offline.press('macro')
+        self.assertEqual(caught.exception.code, 'studio_offline')
+
+    def test_live_timer_tracks_broadcast(self):
+        self.assertIsNone(self.engine.studio_state()['live_since'])
+        before = time.time()
+        self.studio.data['stream_status'] = 1
+        self.studio._notify()
+        since = self.engine.studio_state()['live_since']
+        self.assertGreaterEqual(since, before)
+        self.assertEqual(self.engine.studio_state()['live_since'], since, 'start time is stable while LIVE')
+        self.studio.data['stream_status'] = 0
+        self.studio._notify()
+        self.assertIsNone(self.engine.studio_state()['live_since'])
+
     def test_studio_test_restores_everything(self):
         report = run_studio_test(self.studio, ['BRB', 'Starting', 'Missing'])
         self.assertTrue(report['ok'])

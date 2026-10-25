@@ -3,6 +3,10 @@
 ## 3.0.0 (unreleased)
 
 ### Added
+- **Multi-step buttons**: up to 8 scene, mute and wait steps in one tap (for example BRB + mute
+  mic). Steps run in order and stop at the first failure; the button lights up when every
+  target is in place. One-tap presets: *BRB and mute mic*, *Back to the game*.
+- **LIVE timer** on phones and in the control center.
 - **Direct studio buttons on the phone deck.** Scene, microphone and desktop-sound buttons
   talk to LIVE Studio directly and show its real state (current scene lit, Muted / On).
 - **Control center** replaces the Tk window: Live control switch, setup checklist, studio

@@ -98,6 +98,10 @@ footer { margin-top: 26px; color: #808ba0; font-size: 13px; text-align: center; 
 .key-picker summary, .key-picker > button { grid-column: 1 / -1; }
 .savebar { position: sticky; bottom: -26px; background: #171e2c; padding: 18px 0; display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 10px; }
 #saveError { color: #ffaaaa; font-size: 13px; }
+.steps { display: flex; flex-direction: column; gap: 8px; }
+.step-list { display: flex; flex-direction: column; gap: 6px; }
+.step-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.step-value { display: block; min-width: 0; }
 
 @media (max-width: 760px) {
   .center main { padding: 0 16px 32px; }

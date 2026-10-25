@@ -99,7 +99,14 @@
     'editor.recorded': 'Recorded {keys}. Save when ready.', 'editor.recordBlur': 'Recording cancelled because the window lost focus.',
     'editor.recordTimeout': 'Recording timed out. Try again or choose keys.',
     'editor.matchNoStudio': 'Open LIVE Studio first so its scenes can be matched.', 'editor.matched': '{n} scenes matched. Check them, then save.',
-    'editor.max': 'Remove a button first (32 maximum).', 'editor.newLabel': 'New button', 'editor.saved': 'Deck saved'
+    'editor.max': 'Remove a button first (32 maximum).', 'editor.newLabel': 'New button', 'editor.saved': 'Deck saved',
+    'key.applied': 'Active', 'kind.option.macro': 'Several steps (direct)', 'kind.macroSteps': '{n} steps',
+    'editor.steps': 'STEPS (RUN IN ORDER)', 'editor.addStep': '+ Add step', 'editor.step.scene': 'Switch scene',
+    'editor.step.mic': 'Microphone', 'editor.step.audio': 'Desktop sound', 'editor.step.wait': 'Wait (ms)',
+    'editor.mute': 'Mute', 'editor.unmute': 'Unmute', 'editor.presetBrb': '+ BRB and mute mic',
+    'editor.presetBack': '+ Back to the game', 'editor.presetBrbLabel': 'BRB + mute', 'editor.presetBackLabel': 'Back live',
+    'editor.presetAdded': 'Multi-step button added at the end. Check its scene, then save.',
+    'msg.macro_failed': 'Not every step of {label} worked. Check LIVE Studio.'
   };
 
   const fr = {
@@ -200,7 +207,14 @@
     'editor.recorded': '{keys} enregistré. Enregistrez quand vous êtes prêt.', 'editor.recordBlur': 'Enregistrement annulé : la fenêtre a perdu le focus.',
     'editor.recordTimeout': 'Délai dépassé. Réessayez ou choisissez les touches.',
     'editor.matchNoStudio': 'Ouvrez d’abord LIVE Studio pour associer ses scènes.', 'editor.matched': '{n} scènes associées. Vérifiez-les, puis enregistrez.',
-    'editor.max': 'Retirez d’abord un bouton (32 au maximum).', 'editor.newLabel': 'Nouveau bouton', 'editor.saved': 'Console enregistrée'
+    'editor.max': 'Retirez d’abord un bouton (32 au maximum).', 'editor.newLabel': 'Nouveau bouton', 'editor.saved': 'Console enregistrée',
+    'key.applied': 'Actif', 'kind.option.macro': 'Plusieurs étapes (direct)', 'kind.macroSteps': '{n} étapes',
+    'editor.steps': 'ÉTAPES (DANS L’ORDRE)', 'editor.addStep': '+ Ajouter une étape', 'editor.step.scene': 'Changer de scène',
+    'editor.step.mic': 'Micro', 'editor.step.audio': 'Son du bureau', 'editor.step.wait': 'Attendre (ms)',
+    'editor.mute': 'Couper', 'editor.unmute': 'Rétablir', 'editor.presetBrb': '+ Pause et micro coupé',
+    'editor.presetBack': '+ Retour au jeu', 'editor.presetBrbLabel': 'Pause + micro coupé', 'editor.presetBackLabel': 'Retour en direct',
+    'editor.presetAdded': 'Bouton à plusieurs étapes ajouté à la fin. Vérifiez sa scène, puis enregistrez.',
+    'msg.macro_failed': 'Certaines étapes de {label} n’ont pas fonctionné. Vérifiez LIVE Studio.'
   };
 
   const dictionaries = { en, fr };

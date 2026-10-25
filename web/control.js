@@ -77,7 +77,7 @@ function renderStudio() {
   $('factScene').textContent = s.scene || '—';
   $('factMic').textContent = yesNo(s.mic_muted);
   $('factAudio').textContent = yesNo(s.audio_muted);
-  $('factStream').textContent = !s.connected ? '—' : s.live ? t('live') : t('studio.notLive');
+  tickLiveFact();
   $('studioMessage').textContent = s.connected ? '' : (s.message || '');
   const chips = $('sceneChips');
   chips.replaceChildren(...s.scenes.map(name => L.el('span', 'chip' + (name === s.scene ? ' active' : ''), name)));
@@ -147,6 +147,13 @@ function renderPhones() {
   $('revokeAll').hidden = !state.devices.length;
 }
 
+function tickLiveFact() {
+  if (!state) return;
+  const s = state.studio;
+  $('factStream').textContent = !s.connected ? '—' : !s.live ? t('studio.notLive')
+    : t('live') + (s.live_since ? ' · ' + L.duration(Date.now() / 1000 - s.live_since) : '');
+}
+
 function tickExpiry() {
   if (!state) return;
   const left = Math.max(0, Math.round(state.pairing.expires_at - Date.now() / 1000));
@@ -158,6 +165,7 @@ function describeAction(b) {
   const kind = b.action.kind;
   if (kind === 'scene') return b.action.scene ? t('kind.sceneNamed', { scene: b.action.scene }) : t('kind.sceneMissing');
   if (kind === 'hotkey') return b.shortcut || t('kind.hotkeyMissing');
+  if (kind === 'macro') return t('kind.macroSteps', { n: b.action.steps.length });
   return t('kind.' + kind);
 }
 
@@ -281,13 +289,17 @@ function addRow(b) {
   row.append(heading);
 
   const kind = L.el('select'); kind.name = 'kind';
-  for (const k of ['scene', 'mic', 'audio', 'hotkey']) { const o = L.el('option', '', t('kind.option.' + k)); o.value = k; kind.append(o); }
+  for (const k of ['scene', 'mic', 'audio', 'macro', 'hotkey']) { const o = L.el('option', '', t('kind.option.' + k)); o.value = k; kind.append(o); }
   kind.value = b.action.kind;
   const scene = input('scene', b.action.scene || '', 'text', 200);
   scene.setAttribute('list', 'sceneList');
   scene.placeholder = t('editor.scenePlaceholder');
   const sceneField = field(t('editor.scene'), scene);
-  row.append(field(t('editor.action'), kind), sceneField);
+  const stepsBox = L.el('div', 'steps'), stepList = L.el('div', 'step-list');
+  (b.action.steps || []).forEach(step => stepList.append(stepRow(step)));
+  stepsBox.append(L.el('span', 'tiny', t('editor.steps')), stepList,
+    button(t('editor.addStep'), () => { if (stepList.children.length < 8) stepList.append(stepRow({ kind: 'scene' })); }));
+  row.append(field(t('editor.action'), kind), sceneField, stepsBox);
 
   const shortcutField = input('shortcut', b.shortcut || '', 'text', 80);
   const shortcutWrap = field(t('editor.shortcut'), shortcutField);
@@ -328,11 +340,54 @@ function addRow(b) {
   const sync = () => {
     const k = kind.value;
     sceneField.hidden = k !== 'scene';
-    fallback.hidden = k === 'hotkey';
+    stepsBox.hidden = k !== 'macro';
+    shortcutBox.hidden = k === 'macro';
+    fallback.hidden = k === 'hotkey' || k === 'macro';
+    if (k === 'macro' && !stepList.children.length) stepList.append(stepRow({ kind: 'scene' }));
     shortcutWrap.querySelector('span').textContent = k === 'hotkey' ? t('editor.shortcut') : t('editor.fallbackShortcut');
   };
   kind.onchange = sync; sync();
   $('rows').append(row);
+}
+
+function stepRow(step) {
+  const row = L.el('div', 'step-row');
+  const kind = L.el('select', 'step-kind');
+  for (const k of ['scene', 'mic', 'audio', 'wait']) { const o = L.el('option', '', t('editor.step.' + k)); o.value = k; kind.append(o); }
+  kind.value = step.kind;
+  const value = L.el('span', 'step-value');
+  const build = () => {
+    value.replaceChildren();
+    if (kind.value === 'scene') {
+      const scene = input('stepScene', step.scene || '', 'text', 200);
+      scene.setAttribute('list', 'sceneList');
+      scene.placeholder = t('editor.scenePlaceholder');
+      value.append(scene);
+    } else if (kind.value === 'wait') {
+      const ms = input('stepMs', String(step.ms || 1000), 'number');
+      ms.min = '100'; ms.max = '5000'; ms.step = '100';
+      value.append(ms);
+    } else {
+      const muted = L.el('select');
+      muted.name = 'stepMuted';
+      for (const [v, label] of [['true', t('editor.mute')], ['false', t('editor.unmute')]]) { const o = L.el('option', '', label); o.value = v; muted.append(o); }
+      muted.value = String(step.muted ?? true);
+      value.append(muted);
+    }
+  };
+  kind.onchange = build;
+  build();
+  row.append(kind, value, button('✕', () => row.remove(), 'text-button danger'));
+  return row;
+}
+
+function readSteps(row) {
+  return [...row.querySelectorAll('.step-row')].map(stepNode => {
+    const kind = stepNode.querySelector('.step-kind').value;
+    if (kind === 'scene') return { kind, scene: stepNode.querySelector('[name=stepScene]').value };
+    if (kind === 'wait') return { kind, ms: parseInt(stepNode.querySelector('[name=stepMs]').value, 10) || 0 };
+    return { kind, muted: stepNode.querySelector('[name=stepMuted]').value === 'true' };
+  });
 }
 
 function collect() {
@@ -341,7 +396,7 @@ function collect() {
     const kind = get('kind').value;
     return {
       id: row.dataset.id, label: get('label').value, icon: get('icon').value, color: get('color').value,
-      action: kind === 'scene' ? { kind, scene: get('scene').value } : { kind },
+      action: kind === 'scene' ? { kind, scene: get('scene').value } : kind === 'macro' ? { kind, steps: readSteps(row) } : { kind },
       shortcut: get('shortcut').value, fallback: get('fallback').checked, confirm: get('confirm').checked
     };
   });
@@ -366,6 +421,22 @@ function autoMatch() {
     if (found) { sceneInput.value = found; matched++; }
   }
   $('recordStatus').textContent = t('editor.matched', { n: matched });
+}
+
+function sceneFor(id) {
+  const words = SCENE_WORDS[id];
+  return state.studio.scenes.find(s => words.some(w => s.toLowerCase().includes(w))) || '';
+}
+function addPreset(brb) {
+  if ($('rows').children.length >= 32) { $('saveError').textContent = t('editor.max'); return; }
+  addRow({
+    id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    label: t(brb ? 'editor.presetBrbLabel' : 'editor.presetBackLabel'), icon: brb ? '03' : '02',
+    color: brb ? '#d3acff' : '#4dd9b1', shortcut: '', fallback: false, confirm: false,
+    action: { kind: 'macro', steps: [{ kind: 'scene', scene: sceneFor(brb ? 'brb' : 'gaming') }, { kind: 'mic', muted: brb }] }
+  });
+  $('rows').lastElementChild.scrollIntoView({ block: 'nearest' });
+  $('recordStatus').textContent = t('editor.presetAdded');
 }
 
 function openEditor() {
@@ -426,6 +497,8 @@ $('openLogs').onclick = () => run(() => L.api('open-logs', {}));
 $('close').onclick = () => { stopRecording(); $('editor').close(); };
 $('editor').addEventListener('close', () => stopRecording());
 $('autoMatch').onclick = autoMatch;
+$('presetBrb').onclick = () => addPreset(true);
+$('presetBack').onclick = () => addPreset(false);
 $('add').onclick = () => {
   if ($('rows').children.length >= 32) { $('saveError').textContent = t('editor.max'); return; }
   addRow({ id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), label: t('editor.newLabel'), icon: '✦',
@@ -442,7 +515,7 @@ $('editForm').onsubmit = async e => {
 };
 $('lang').onclick = () => { I18n.toggle(); render(); };
 document.addEventListener('i18n', () => { $('lang').textContent = I18n.lang === 'fr' ? 'EN' : 'FR'; });
-setInterval(tickExpiry, 1000);
+setInterval(() => { tickExpiry(); tickLiveFact(); }, 1000);
 
 I18n.apply();
 if (!L.token) {

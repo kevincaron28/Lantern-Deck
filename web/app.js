@@ -14,6 +14,11 @@ L.token = readToken();
 function keyState(b, studio) {
   const kind = b.action.kind;
   if (!studio.connected || kind === 'hotkey') return null;
+  if (kind === 'macro') {
+    const targets = b.action.steps.filter(s => s.kind !== 'wait');
+    const reached = targets.every(s => s.kind === 'scene' ? studio.scene === s.scene : studio[s.kind + '_muted'] === s.muted);
+    return reached ? { cls: 'active', text: t('key.applied') } : null;
+  }
   if (kind === 'scene') return studio.scene === b.action.scene ? { cls: 'active', text: t('key.current') } : null;
   const muted = studio[kind + '_muted'];
   return muted ? { cls: 'muted', text: t('key.muted') } : { cls: 'on', text: t('key.on') };
@@ -32,6 +37,7 @@ function render() {
   $('controlPill').textContent = state.control ? t('control.on') : t('control.off');
   $('controlPill').className = 'pill ' + (state.control ? 'ok strong' : 'muted');
   $('livePill').hidden = !studio.live;
+  tickLive();
   $('emptyDeck').hidden = state.buttons.length > 0;
   $('deckNote').textContent = state.buttons.some(b => b.action.kind !== 'hotkey')
     ? (studio.connected ? t('deck.noteDirect') : t('deck.noteOffline')) : t('deck.noteHotkey');
@@ -55,6 +61,12 @@ function render() {
     deck.append(el);
   }
 }
+
+function tickLive() {
+  const since = state && state.studio.live_since;
+  $('livePill').textContent = t('live') + (since ? ' · ' + L.duration(Date.now() / 1000 - since) : '');
+}
+setInterval(tickLive, 1000);
 
 function ask(text) {
   return new Promise(resolve => {

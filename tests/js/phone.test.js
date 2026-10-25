@@ -4,12 +4,16 @@ const { load, respond, wait } = require('./dom');
 
 const state = {
   version: '3.0.0', admin: false, device: 'Test', control: true,
-  studio: { connected: true, message: null, scene: 'Gaming', scenes: ['Gaming', 'BRB'], mic_muted: false, audio_muted: true, stream_status: 1, live: true },
+  studio: { connected: true, message: null, scene: 'Gaming', scenes: ['Gaming', 'BRB'], mic_muted: false, audio_muted: true, stream_status: 1, live: true, live_since: Date.now() / 1000 - 3725 },
   buttons: [
     { id: 'gaming', label: 'Main gaming', icon: '02', color: '#4dd9b1', action: { kind: 'scene', scene: 'Gaming' }, confirm: false },
     { id: 'brb', label: 'BRB', icon: '03', color: '#d3acff', action: { kind: 'scene', scene: 'BRB' }, confirm: false },
     { id: 'microphone', label: 'Microphone', icon: '♫', color: '#f4b66c', action: { kind: 'mic' }, confirm: false },
-    { id: 'desktop-audio', label: 'Desktop sound', icon: '♪', color: '#7dd4e8', action: { kind: 'audio' }, confirm: false }
+    { id: 'desktop-audio', label: 'Desktop sound', icon: '♪', color: '#7dd4e8', action: { kind: 'audio' }, confirm: false },
+    { id: 'gamingon', label: 'Back live', icon: '02', color: '#4dd9b1', confirm: false,
+      action: { kind: 'macro', steps: [{ kind: 'scene', scene: 'Gaming' }, { kind: 'wait', ms: 200 }, { kind: 'mic', muted: false }] } },
+    { id: 'brbmute', label: 'BRB + mute', icon: '03', color: '#d3acff', confirm: false,
+      action: { kind: 'macro', steps: [{ kind: 'scene', scene: 'BRB' }, { kind: 'mic', muted: true }] } }
   ]
 };
 const presses = [];
@@ -35,7 +39,10 @@ const fetch = async (url, opts = {}) => {
   await wait(50);
   assert.equal(d.getElementById('pair').hidden, true);
   const keys = () => [...d.querySelectorAll('.key')];
-  assert.equal(keys().length, 4);
+  assert.equal(keys().length, 6);
+  assert.ok(keys()[4].classList.contains('active'), 'multi-step button lit when its targets are reached');
+  assert.ok(!keys()[5].classList.contains('active'));
+  assert.match(d.getElementById('livePill').textContent, /LIVE · 1:02:0[56]/);
   assert.ok(keys()[0].classList.contains('active'), 'current scene lit');
   assert.ok(!keys()[1].classList.contains('active'));
   assert.ok(keys()[2].classList.contains('on'), 'mic on');
@@ -43,6 +50,8 @@ const fetch = async (url, opts = {}) => {
   assert.equal(d.getElementById('livePill').hidden, false);
   assert.match(d.getElementById('controlPill').textContent, /Live control ON/);
 
+  keys()[5].click(); await wait(120);
+  assert.deepEqual(presses.at(-1), { id: 'brbmute', confirmed: false }, 'multi-step buttons send no target');
   keys()[2].click(); await wait(50);
   assert.deepEqual(presses.at(-1), { id: 'microphone', confirmed: false, target: true });
   keys()[3].click(); await wait(50);

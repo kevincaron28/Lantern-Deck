@@ -100,6 +100,13 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { box.hidden = true; }, 4200);
   };
 
+  /* 3725 -> "1:02:05": elapsed broadcast time. */
+  Lantern.duration = function (seconds) {
+    const s = Math.max(0, Math.floor(seconds));
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(r).padStart(2, '0');
+  };
+
   Lantern.el = function (tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;

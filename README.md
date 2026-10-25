@@ -19,6 +19,9 @@ no subscription, no telemetry.
   on **Live control**. While you are LIVE, phones confirm scene changes. Every action is
   verified against LIVE Studio's state; nothing is ever retried automatically, so a toggle
   can never flip twice.
+- **Multi-step buttons.** One tap for several steps, such as switching to BRB and muting
+  the mic. Steps run in order and stop at the first failure. A LIVE timer shows how long
+  you have been broadcasting.
 - **Keyboard shortcuts** remain available for anything else, and as an optional backup
   when LIVE Studio's controller is not reachable.
 - **Runs in the tray.** Closing the control center keeps the deck running. Optional

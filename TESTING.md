@@ -76,9 +76,9 @@ display are Maison Panel UI issues (its `js/deck.js`), not Lantern Deck.
 ### Not yet verified (needs the real setup)
 - **Which non-zero `stream_status` means LIVE** (0 = not live is confirmed on 1.38.0). Non-zero
   values are treated as LIVE; only observable during a real broadcast.
-- Physical Samsung phone / Samsung Internet, Windows firewall prompt on a clean PC, the
-  Maison relay with 3.0 (protocol unchanged; replies gained `reason`/`message`), the
-  installer, start with Windows after a reboot, and SmartScreen behaviour.
+- Physical Samsung phone / Samsung Internet on the local phone deck, Windows firewall prompt on
+  a clean PC, the installer, start with Windows after a reboot, and SmartScreen behaviour.
+  (The Maison relay with 3.0 is verified on the streaming PC.)
 
 ## Earlier versions
 Version 2.0 added the Maison integration (14 Python tests, fixture wire test, packaged

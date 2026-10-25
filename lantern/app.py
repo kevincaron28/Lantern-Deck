@@ -72,7 +72,8 @@ def run(args):
     data_dir = Path(args.data_dir) if args.data_dir else storage.data_dir()
     data_dir.mkdir(parents=True, exist_ok=True)
     logsetup.setup(data_dir)
-    log.info('Lantern Deck %s starting', VERSION)
+    from lantern.diagnostics import installed_studio_version
+    log.info('Lantern Deck %s starting (LIVE Studio installed: %s)', VERSION, installed_studio_version() or 'not found')
     mutex = desktop.acquire_single_instance()
     if mutex is None:
         if not notify_running_instance(args.port):

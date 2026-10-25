@@ -54,6 +54,16 @@ checklist progression, scene auto-match and save, pairing a phone, current-scene
 mute state, Live control ON, scene switch and mic mute from the phone, studio test with
 restore, French interface.
 
+### Streaming PC (reported October 25, 2026)
+On the streaming PC (TikTok LIVE Studio **1.38.0**), commit 4b49b6c was built with
+`build.ps1 -SkipInstaller`; the packaged self-test passed. The running app logged
+"LIVE Studio controller connected on port 28189": the real controller handshake works on 1.38.0,
+where 28189 is the only port LIVE Studio listens on (IPv6 any). The 2.0 Maison credential was
+upgraded to DPAPI and the Maison relay connected. Not yet done there: studio test, tablet
+pairing, firewall prompt. That LIVE Studio account must never broadcast, so `stream_status`
+is checked from the log instead of with a test broadcast (the app now logs its value on connect
+and on every change).
+
 ### Not yet verified (needs the real setup)
 - **Real LIVE Studio.** LIVE Studio was not running during development, so no real scene
   or mute command has been sent by any version. Do this before relying on it:

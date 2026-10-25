@@ -266,6 +266,9 @@ class StudioClient:
             if event[0] == 'stream_deck/sync_settings':
                 data = normalize_state(event[1])
                 changed = data != self.data
+                if self.data is None or data['stream_status'] != self.data['stream_status']:
+                    # Recorded so the meaning of stream_status can be checked from the log.
+                    log.info('Studio state: %d scenes, stream_status=%s', len(data['scenes']), data['stream_status'])
                 self.data = data
                 self.updated = time.monotonic()
                 self.sequence += 1

@@ -85,6 +85,21 @@ class StudioTests(unittest.TestCase):
                 raise psutil.AccessDenied()
         self.assertEqual(listening_ports([Proc(), Denied()]), [KNOWN_PORTS[1], 50000])
 
+    def test_field_discovery_records_names_never_values(self):
+        client = fake_studio()
+        raw = RAW | {'viewer_count': 1234, 'secret_title': 'my private title'}
+        with self.assertLogs('lantern.studio', 'INFO') as logs:
+            client._handle(['stream_deck/sync_settings', json.dumps(raw)])
+            client._handle(['stream_deck/sync_settings', json.dumps(raw)])
+            client._handle(['stream_deck/new_feature', '{}'])
+        self.assertIn('viewer_count', client.diagnostics()['fields'])
+        self.assertIn('scene_list[].name', client.diagnostics()['fields'])
+        self.assertEqual(client.diagnostics()['events'], ['stream_deck/new_feature'])
+        text = '\n'.join(logs.output)
+        self.assertNotIn('1234', text)
+        self.assertNotIn('my private title', text)
+        self.assertEqual(text.count('Studio reports fields'), 1, 'logged once, not on every sync')
+
     def test_live_detection(self):
         self.assertFalse(is_live(None))
         self.assertFalse(is_live(normalize_state(RAW)))
@@ -366,6 +381,53 @@ class BridgeTests(unittest.TestCase):
         self.assertFalse(link.path.exists())
         self.assertTrue(made[0].closed)
         self.assertFalse(link.status()['paired'])
+
+    def test_snapshot_publishes_the_usable_deck(self):
+        config = profile('direct')
+        config['buttons'][2]['action']['scene'] = 'BRB'
+        self.engine.store.save(config)
+        deck = self.bridge.handle({'type': 'state', 'id': 's'})['snapshot']['deck']
+        self.assertEqual([b['id'] for b in deck], ['brb', 'microphone', 'desktop-audio'])
+        self.assertNotIn('shortcut', deck[0])
+        self.assertEqual(deck[0]['action'], {'kind': 'scene', 'scene': 'BRB'})
+
+    def test_maison_presses_saved_buttons_through_the_engine(self):
+        config = profile('direct')
+        config['buttons'].append({'id': 'brbmute', 'label': 'BRB + mute', 'icon': '03', 'color': '#d3acff',
+                                  'action': {'kind': 'macro', 'steps': [{'kind': 'scene', 'scene': 'BRB'},
+                                                                        {'kind': 'mic', 'muted': True}]},
+                                  'shortcut': '', 'fallback': False, 'confirm': False})
+        self.engine.store.save(config)
+        self.engine.set_control(True)
+        press = {'action': 'press', 'button': 'brbmute'}
+        reply = self.bridge.handle(self.message('p1', command=press))
+        self.assertTrue(reply['ok'])
+        self.assertEqual(reply['result']['code'], 'done')
+        self.assertEqual((self.studio.data['scene'], self.studio.data['mic_mute']), ('BRB', True))
+        self.assertEqual(self.engine.history[0]['source'], 'maison')
+        self.engine.last = 0
+        self.studio.data['stream_status'] = 1
+        self.studio.data['scene'] = 'Gaming'
+        reply = self.bridge.handle(self.message('p2', command=press))
+        self.assertEqual((reply['ok'], reply['reason']), (False, 'confirm_live'))
+        self.engine.last = 0
+        self.assertTrue(self.bridge.handle(self.message('p3', command=press | {'confirmed': True}))['ok'])
+        self.engine.last = 0
+        reply = self.bridge.handle(self.message('p4', command={'action': 'press', 'button': 'nope'}))
+        self.assertEqual(reply['reason'], 'unknown_button')
+        self.engine.last = 0
+        reply = self.bridge.handle(self.message('p5', command={'action': 'press', 'button': 'microphone', 'target': True}))
+        self.assertEqual(reply['result']['code'], 'already')
+
+    def test_actions_are_answered_off_the_receive_loop(self):
+        sent = []
+
+        class Socket:
+            def send(self, raw):
+                sent.append(json.loads(raw))
+        self.bridge._answer(Socket(), {'type': 'state', 'id': 'x'})
+        self.bridge._answer(Socket(), {'type': 'bogus'})
+        self.assertEqual([m['id'] for m in sent], ['x'])
 
     def test_relay_refusal_marks_revoked(self):
         import websocket

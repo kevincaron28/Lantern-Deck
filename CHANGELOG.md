@@ -3,6 +3,12 @@
 ## 3.0.0 (unreleased)
 
 ### Added
+- **Maison Panel shows your Lantern deck.** The bridge publishes the configured buttons and
+  accepts presses by button id, so the wall tablet gets multi-step buttons, custom buttons and
+  LIVE confirmation, all run by the same engine as phones. Actions run beside the receive
+  loop so status updates keep flowing during multi-step buttons.
+- **Capability discovery**: the names (never values) of every field and event LIVE Studio
+  reports are logged once and listed under Diagnostics.
 - **Multi-step buttons**: up to 8 scene, mute and wait steps in one tap (for example BRB + mute
   mic). Steps run in order and stop at the first failure; the button lights up when every
   target is in place. One-tap presets: *BRB and mute mic*, *Back to the game*.

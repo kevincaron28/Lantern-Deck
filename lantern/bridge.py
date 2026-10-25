@@ -13,6 +13,7 @@ import urllib.request
 import websocket
 
 from lantern import VERSION, dpapi, storage
+from lantern.deck import usable
 from lantern.engine import ActionError
 from lantern.studio import StudioError
 
@@ -75,12 +76,17 @@ class MaisonBridge:
         self.state = 'connecting'
         self.message = 'Connecting to Maison Panel…'
         self.seen = deque(maxlen=256)
+        self.send_lock = threading.Lock()
         self.thread = threading.Thread(target=self._run, name='maison', daemon=True)
         if start:
             self.thread.start()
 
     def snapshot(self):
-        return self.engine.studio.snapshot() | {'enabled': self.engine.control, 'computer': socket.gethostname()}
+        # `deck` lets Maison show the buttons configured in Lantern Deck (3.1+), including multi-step ones.
+        deck = [{k: b[k] for k in ('id', 'label', 'icon', 'color', 'action', 'confirm')}
+                for b in self.engine.store.config['buttons'] if usable(b)]
+        return self.engine.studio.snapshot() | {'enabled': self.engine.control, 'computer': socket.gethostname(),
+                                                'deck': deck}
 
     def handle(self, message):
         """Answer one relay message. 'error' keeps the 2.0 codes; 'reason' adds the specific cause."""
@@ -102,12 +108,34 @@ class MaisonBridge:
         expires = message.get('expires')
         if type(expires) not in (int, float) or not 0 < expires - time.time() * 1000 <= 10000:
             return {'id': ident, 'ok': False, 'error': 'command_expired', 'reason': 'command_expired'}
+        command = message.get('command')
         try:
-            self.engine.command(message.get('command'))
+            if isinstance(command, dict) and command.get('action') == 'press':
+                # A saved Lantern button, run exactly like a phone press (multi-step, LIVE confirmation...).
+                target = command.get('target')
+                result = self.engine.press(str(command.get('button', ''))[:40], 'maison', command.get('confirmed') is True,
+                                           target if type(target) is bool else None)
+                return {'id': ident, 'ok': True, 'result': {'code': result['code'], 'message': result['message']},
+                        'snapshot': self.snapshot()}
+            self.engine.command(command)
             return {'id': ident, 'ok': True, 'snapshot': self.snapshot()}
         except (ActionError, StudioError, ValueError, RuntimeError, OSError, websocket.WebSocketException) as exc:
             return {'id': ident, 'ok': False, 'error': 'action_unconfirmed', 'reason': reason_for(exc),
                     'message': str(exc)}
+
+    def _send(self, ws, reply):
+        with self.send_lock:
+            ws.send(json.dumps(reply))
+
+    def _answer(self, ws, request):
+        try:
+            reply = self.handle(request)
+        except ValueError:
+            return
+        try:
+            self._send(ws, reply)
+        except (OSError, websocket.WebSocketException):
+            log.warning('Could not deliver an action reply to Maison')
 
     def _run(self):
         while not self.stop_event.is_set():
@@ -125,7 +153,8 @@ class MaisonBridge:
                 last_ping = time.monotonic()
                 while not self.stop_event.is_set():
                     if time.monotonic() - last_ping > 20:
-                        ws.send('ping')
+                        with self.send_lock:
+                            ws.send('ping')
                         last_ping = time.monotonic()
                     try:
                         message = ws.recv()
@@ -135,7 +164,12 @@ class MaisonBridge:
                         raise RuntimeError('Disconnected')
                     if message == 'pong' or not isinstance(message, str) or len(message) > 4096:
                         continue
-                    ws.send(json.dumps(self.handle(json.loads(message))))
+                    request = json.loads(message)
+                    if isinstance(request, dict) and request.get('type') == 'action':
+                        # Actions (multi-step ones can take seconds) run aside so state polls keep answering.
+                        threading.Thread(target=self._answer, args=(ws, request), name='maison-action', daemon=True).start()
+                    else:
+                        self._send(ws, self.handle(request))
             except websocket.WebSocketBadStatusException as exc:
                 code = getattr(exc, 'status_code', None)
                 if code in (401, 403):

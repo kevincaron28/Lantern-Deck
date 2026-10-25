@@ -26,6 +26,8 @@ class TransportTests(unittest.TestCase):
         if self.fixture.poll() is None:
             self.fixture.terminate()
             self.fixture.wait()
+        self.fixture.stdout.close()
+        self.fixture.stdin.close()
 
     def test_full_wire_protocol(self):
         self.assertTrue(wait_for(lambda: self.client.snapshot()['connected'], 10), self.client.detail)

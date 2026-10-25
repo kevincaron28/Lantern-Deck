@@ -90,6 +90,22 @@ def normalize_state(raw):
             'stream_status': data['stream_status'], 'scene': scene, 'scenes': names}
 
 
+def field_names(value, prefix='', depth=0):
+    """Dotted field names in a studio message (list items merged, values never kept)."""
+    names = set()
+    if depth > 3:
+        return names
+    if isinstance(value, dict):
+        for key, item in list(value.items())[:100]:
+            name = prefix + str(key)[:60]
+            names.add(name)
+            names |= field_names(item, name + '.', depth + 1)
+    elif isinstance(value, list):
+        for item in value[:5]:
+            names |= field_names(item, prefix.rstrip('.') + '[].', depth + 1)
+    return names
+
+
 def action_for(command, state):
     """Translate an allowlisted command into (studio action, settings, state field, target)."""
     if not isinstance(command, dict):
@@ -120,7 +136,7 @@ class OfflineStudio:
         return {'connected': False, 'error': ERROR_MESSAGES['studio_offline'], 'state': None, 'port': None}
 
     def diagnostics(self):
-        return {'running': False, 'ports': [], 'port': None, 'detail': 'Offline stand-in'}
+        return {'running': False, 'ports': [], 'port': None, 'detail': 'Offline stand-in', 'fields': [], 'events': []}
 
     def add_listener(self, listener):
         self.listeners.append(listener)
@@ -149,6 +165,8 @@ class StudioClient:
         self.preferred = None
         self.ports_seen = []
         self.detail = 'Not started'
+        self.fields = []  # Names (never values) of every field LIVE Studio reports, for capability discovery.
+        self.events = set()  # Names of other events LIVE Studio pushes.
         self.error = ERROR_MESSAGES['studio_offline']
         self.listeners = []
         self.thread = threading.Thread(target=self._run, name='studio', daemon=True)
@@ -174,7 +192,8 @@ class StudioClient:
 
     def diagnostics(self):
         return {'running': bool(studio_processes()), 'ports': list(self.ports_seen),
-                'port': self.port, 'detail': self.detail}
+                'port': self.port, 'detail': self.detail, 'fields': list(self.fields),
+                'events': sorted(self.events)}
 
     def emit(self, name, payload=None):
         packet = [f'stream_deck/{name}']
@@ -264,7 +283,12 @@ class StudioClient:
         changed = False
         with self.changed:
             if event[0] == 'stream_deck/sync_settings':
-                data = normalize_state(event[1])
+                raw = json.loads(event[1]) if isinstance(event[1], str) else event[1]
+                fields = sorted(field_names(raw))
+                if fields != self.fields:
+                    self.fields = fields
+                    log.info('Studio reports fields: %s', ', '.join(fields))
+                data = normalize_state(raw)
                 changed = data != self.data
                 if self.data is None or data['stream_status'] != self.data['stream_status']:
                     # Recorded so the meaning of stream_status can be checked from the log.
@@ -275,6 +299,10 @@ class StudioClient:
                 self.error = 'Studio state is stale; waiting for LIVE Studio.'
             elif event[0] in self.results:
                 self.results[event[0]] = json.loads(event[1]) if isinstance(event[1], str) else event[1]
+            elif (isinstance(event[0], str) and not event[0].startswith('stream_deck/lantern_')
+                  and event[0] not in self.events and len(self.events) < 50):
+                self.events.add(event[0][:80])
+                log.info('Studio sent event: %s', event[0][:80])
             self.changed.notify_all()
         if changed:
             self._notify()

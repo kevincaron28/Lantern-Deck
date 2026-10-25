@@ -14,7 +14,8 @@ no subscription, no telemetry.
   No hotkeys needed.
 - **Phone and tablet deck.** Scan a QR code, enter a one-time code, done. Paired devices
   stay paired across restarts until you remove them.
-- **Maison Panel.** Optionally control the PC from the Deck tab of your Maison home panel.
+- **Maison Panel.** Optionally control the PC from the Deck tab of your Maison home panel. The
+  tablet shows the same buttons you build in Lantern Deck, multi-step ones included.
 - **Safe by default.** Starts in rehearsal (nothing reaches LIVE Studio) until you turn
   on **Live control**. While you are LIVE, phones confirm scene changes. Every action is
   verified against LIVE Studio's state; nothing is ever retried automatically, so a toggle

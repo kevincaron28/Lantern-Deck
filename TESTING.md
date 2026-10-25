@@ -80,6 +80,18 @@ display are Maison Panel UI issues (its `js/deck.js`), not Lantern Deck.
   a clean PC, the installer, start with Windows after a reboot, and SmartScreen behaviour.
   (The Maison relay with 3.0 is verified on the streaming PC.)
 
+### Closing the last unknowns (owner checklist)
+1. **Which `stream_status` means LIVE.** Never on the family account. With LIVE Studio signed in
+   to a *different*, throwaway TikTok account, start a short private broadcast, then stop it.
+   `%LOCALAPPDATA%\LanternDeck\logs\lantern.log` records every change as
+   `Studio state: … stream_status=N`, and the Diagnostics report lists all reported field names.
+   Expected: non-zero while live, 0 again after. Send the log lines to update `is_live`.
+2. **Physical phone.** On a Samsung phone on the home Wi-Fi, scan the control-center QR, pair,
+   tap a scene and the mic with Live control ON, and check the tiles follow LIVE Studio.
+   Allow Windows Firewall on *Private* networks only if the phone cannot load the page.
+3. **Reboot test.** With Start with Windows and Remember Live control enabled, restart the
+   streaming PC, open LIVE Studio, and press a tablet button without touching the PC.
+
 ## Earlier versions
 Version 2.0 added the Maison integration (14 Python tests, fixture wire test, packaged
 self-test; real LIVE Studio control unverified). Versions 1.0–1.2 covered the keyboard

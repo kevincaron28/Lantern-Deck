@@ -43,6 +43,8 @@ def report(ctx):
         'studio': {'installed_version': installed_studio_version(), 'process_running': detail['running'],
                    'listening_ports': detail['ports'], 'connected_port': detail['port'],
                    'connection_detail': detail['detail'], 'connected': studio['connected'],
+                   'reported_fields': detail.get('fields', []),
+                   'other_events': detail.get('events', []),
                    'scene_count': len(studio['scenes']), 'current_scene': studio['scene'],
                    'mic_muted': studio['mic_muted'], 'audio_muted': studio['audio_muted'],
                    'stream_status': studio['stream_status']},
